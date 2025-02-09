@@ -1,0 +1,51 @@
+services:
+  # db
+  mysql:
+    image: mysql:8.0
+    container_name: mysql-container
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_USER: myuser
+      MYSQL_PASSWORD: mypassword
+    volumes:
+      - ./init:/docker-entrypoint-initdb.d
+    ports:
+      - "3306:3306"
+
+  # reverse-proxy
+  traefik:
+    image: traefik:v2.10
+    container_name: traefik
+    restart: always
+    ports:
+      - "80:80"      # HTTP
+      - "443:443"    # HTTPS
+      - "8080:8080"  # Traefik Dashboard
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./traefik.yml:/etc/traefik/traefik.yml
+      - ./certs:/certs  # Mount SSL certificates
+
+  # domain-api
+  domain-api:
+    image: domain-api
+    container_name: domain-api
+    build:
+      context: ${DomailApiDockerContext}
+      dockerfile: ${DomailApiDockerFile}
+    expose:
+      - 5011
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - DOTNET_RUNNING_IN_CONTAINER=true
+      - ASPNETCORE_URLS=http://+:5011
+      - USE_SWAGGER=${UseSwagger}
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.domain-api.rule=Host(`domain-api.localhost`)"      
+      - "traefik.http.routers.domain-api.entrypoints=websecure"
+      - "traefik.http.routers.domain-api.tls=true"
+      - "traefik.http.routers.domain-api.tls.domains[0].main=domain-api.localhost"
+      - "traefik.http.services.domain-api.loadbalancer.server.port=5011"
+    restart: always
