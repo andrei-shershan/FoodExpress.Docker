@@ -32,8 +32,8 @@ services:
     image: domain-api
     container_name: domain-api
     build:
-      context: ${DomailApiDockerContext}
-      dockerfile: ${DomailApiDockerFile}
+      context: ${DomainApiDockerContext}
+      dockerfile: ${DomainApiDockerFile}
     expose:
       - 5011
     environment:
@@ -41,6 +41,7 @@ services:
       - DOTNET_RUNNING_IN_CONTAINER=true
       - ASPNETCORE_URLS=http://+:5011
       - USE_SWAGGER=${UseSwagger}
+      - ConnectionStrings__LocalDB=${ConnectionStrings__LocalDB}
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.domain-api.rule=Host(`domain-api.localhost`)"      
@@ -49,3 +50,44 @@ services:
       - "traefik.http.routers.domain-api.tls.domains[0].main=domain-api.localhost"
       - "traefik.http.services.domain-api.loadbalancer.server.port=5011"
     restart: always
+
+  # foodexpress-api
+  foodexpress-api:
+    image: foodexpress-api
+    container_name: foodexpress-api
+    build:
+      context: ${FoodExpessApiDockerContext}
+      dockerfile: ${FoodExpessApiDockerFile}
+    expose:
+      - 5011
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - DOTNET_RUNNING_IN_CONTAINER=true
+      - ASPNETCORE_URLS=http://+:5011
+      - USE_SWAGGER=${UseSwagger}
+      - ConnectionStrings__LocalDB=${ConnectionStrings__LocalDB}
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.foodexpress-api.rule=Host(`foodexpress-api.localhost`)"      
+      - "traefik.http.routers.foodexpress-api.entrypoints=websecure"
+      - "traefik.http.routers.foodexpress-api.tls=true"
+      - "traefik.http.routers.foodexpress-api.tls.domains[0].main=foodexpress-api.localhost"
+      - "traefik.http.services.foodexpress-api.loadbalancer.server.port=5011"
+    restart: always
+
+#   # mongo
+#   mongodb:
+#     image: mongo:latest
+#     container_name: my-mongodb
+#     restart: always
+#     ports:
+#       - "27017:27017"
+#     environment:
+#       MONGO_INITDB_ROOT_USERNAME: root
+#       MONGO_INITDB_ROOT_PASSWORD: example
+#     volumes:
+#       - mongo-data:/data/db
+
+# volumes:
+#   mongo-data:
+#     driver: local
