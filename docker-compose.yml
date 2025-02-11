@@ -75,6 +75,26 @@ services:
       - "traefik.http.services.foodexpress-api.loadbalancer.server.port=5011"
     restart: always
 
+  # my-ui
+  foodexpress-ui:
+    image: foodexpress-ui
+    container_name: foodexpress-ui
+    build:
+      context: ${FoodexpressUiDockerContext}
+      dockerfile: ${FoodexpressUiDockerFile}
+    expose:
+      - 80
+    environment:
+      - NODE_ENV=production
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.foodexpress-ui.rule=Host(`foodexpress-ui.localhost`)"
+      - "traefik.http.routers.foodexpress-ui.entrypoints=web"
+      # - "traefik.http.routers.foodexpress-ui.tls=true"
+      # - "traefik.http.routers.foodexpress-ui.tls.domains[0].main=foodexpress-ui.localhost"
+      - "traefik.http.services.foodexpress-ui.loadbalancer.server.port=80"
+    restart: always
+
 #   # mongo
 #   mongodb:
 #     image: mongo:latest
